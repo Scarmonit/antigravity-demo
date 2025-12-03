@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 interface RAGTool {
     name: string;
@@ -6,32 +6,32 @@ interface RAGTool {
     category: 'search' | 'ingest' | 'manage';
 }
 
+const tools: RAGTool[] = [
+    { name: 'search_docs', description: 'Semantic search with filtering', category: 'search' },
+    { name: 'hybrid_search', description: 'Semantic + keyword search', category: 'search' },
+    { name: 'search_with_threshold', description: 'Similarity threshold filtering', category: 'search' },
+    { name: 'add_document', description: 'Add single document', category: 'ingest' },
+    { name: 'add_documents_batch', description: 'Bulk add up to 100 docs', category: 'ingest' },
+    { name: 'ingest_file', description: 'Ingest local files', category: 'ingest' },
+    { name: 'ingest_url', description: 'Fetch and ingest from URL', category: 'ingest' },
+    { name: 'chunk_document', description: 'Preview chunking', category: 'ingest' },
+    { name: 'list_sources', description: 'View all sources', category: 'manage' },
+    { name: 'delete_source', description: 'Remove source documents', category: 'manage' },
+    { name: 'export_documents', description: 'Export to JSON', category: 'manage' },
+    { name: 'get_stats', description: 'Collection statistics', category: 'manage' },
+    { name: 'health_check', description: 'Server health status', category: 'manage' },
+];
+
+const categories = [
+    { id: 'search' as const, label: 'Search', icon: '🔍' },
+    { id: 'ingest' as const, label: 'Ingest', icon: '📥' },
+    { id: 'manage' as const, label: 'Manage', icon: '⚙️' },
+];
+
 const RAGShowcase: React.FC = React.memo(() => {
     const [activeCategory, setActiveCategory] = useState<'search' | 'ingest' | 'manage'>('search');
 
-    const tools: RAGTool[] = [
-        { name: 'search_docs', description: 'Semantic search with filtering', category: 'search' },
-        { name: 'hybrid_search', description: 'Semantic + keyword search', category: 'search' },
-        { name: 'search_with_threshold', description: 'Similarity threshold filtering', category: 'search' },
-        { name: 'add_document', description: 'Add single document', category: 'ingest' },
-        { name: 'add_documents_batch', description: 'Bulk add up to 100 docs', category: 'ingest' },
-        { name: 'ingest_file', description: 'Ingest local files', category: 'ingest' },
-        { name: 'ingest_url', description: 'Fetch and ingest from URL', category: 'ingest' },
-        { name: 'chunk_document', description: 'Preview chunking', category: 'ingest' },
-        { name: 'list_sources', description: 'View all sources', category: 'manage' },
-        { name: 'delete_source', description: 'Remove source documents', category: 'manage' },
-        { name: 'export_documents', description: 'Export to JSON', category: 'manage' },
-        { name: 'get_stats', description: 'Collection statistics', category: 'manage' },
-        { name: 'health_check', description: 'Server health status', category: 'manage' },
-    ];
-
-    const categories = [
-        { id: 'search' as const, label: 'Search', icon: '🔍' },
-        { id: 'ingest' as const, label: 'Ingest', icon: '📥' },
-        { id: 'manage' as const, label: 'Manage', icon: '⚙️' },
-    ];
-
-    const filteredTools = tools.filter(t => t.category === activeCategory);
+    const filteredTools = useMemo(() => tools.filter(t => t.category === activeCategory), [activeCategory]);
 
     return (
         <div className="card rag-showcase">
@@ -84,5 +84,7 @@ const RAGShowcase: React.FC = React.memo(() => {
         </div>
     );
 });
+
+RAGShowcase.displayName = 'RAGShowcase';
 
 export default RAGShowcase;
