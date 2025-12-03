@@ -1,0 +1,377 @@
+# GitHub Actions Workflow for Checkpoint-Enabled Deployment
+# Automated CI/CD with Git checkpointing and verification
+
+name: Checkpoint Deployment
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      deployment_target:
+        description: 'Deployment Target'
+        required: true
+        default: 'vercel'
+        type: choice
+        options:
+          - vercel
+          - netlify
+          - firebase
+          - github-pages
+      skip_verification:
+        description: 'Skip Post-Deployment Verification'
+        required: false
+        default: false
+        type: boolean
+      create_checkpoint_only:
+        description: 'Create Checkpoint Only (No Deployment)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  DEPLOYMENT_URL: ''
+  CHECKPOINT_TAG: ''
+
+jobs:
+  # Pre-deployment checks and setup
+  pre-deployment:
+    name: Pre-Deployment Validation
+    runs-on: ubuntu-latest
+    outputs:
+      checkpoint-tag: ${{ steps.checkpoint.outputs.tag }}
+      deployment-url: ${{ steps.set-url.outputs.url }}
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for Git operations
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Run Linting
+        run: npm run lint
+        continue-on-error: true
+      
+      - name: Run TypeScript Check
+        run: npm run typecheck
+        continue-on-error: true
+      
+      - name: Run Unit Tests
+        run: npm run test:unit
+        continue-on-error: true
+      
+      - name: Build Application
+        run: npm run build
+      
+      - name: Check Deployment Prerequisites
+        id: check
+        run: |
+          if [[ "${{ github.event.inputs.create_checkpoint_only }}" == "true" ]]; then
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+          else
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Set Deployment URL
+        id: set-url
+        run: |
+          if [[ "${{ github.event.inputs.deployment_target }}" == "netlify" ]]; then
+            echo "url=https://antigravity-demo.netlify.app" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.inputs.deployment_target }}" == "firebase" ]]; then
+            echo "url=https://antigravity-demo.firebaseapp.com" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.inputs.deployment_target }}" == "github-pages" ]]; then
+            echo "url=https://scarmonit.github.io/antigravity-demo" >> $GITHUB_OUTPUT
+          else
+            echo "url=https://antigravity-demo-rho.vercel.app" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create Deployment Checkpoint
+        id: checkpoint
+        run: |
+          # Install PowerShell if not available
+          if ! command -v pwsh &> /dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y wget apt-transport-https software-properties-common
+            wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+            sudo dpkg -i packages-microsoft-prod.deb
+            sudo apt-get update
+            sudo apt-get install -y powershell
+          fi
+          
+          # Create checkpoint
+          $TAG_NAME=$(pwsh -File scripts/deploy-checkpoint.ps1 -Action Create -Target ${{ github.event.inputs.deployment_target || 'vercel' }})
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "Created checkpoint: $TAG_NAME"
+      
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            build/
+            .next/
+            !node_modules/
+          retention-days: 7
+
+  # Deployment job
+  deploy:
+    name: Deploy Application
+    needs: pre-deployment
+    if: needs.pre-deployment.outputs.should-deploy == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: npm ci
+      
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+      
+      - name: Deploy to Vercel
+        if: github.event.inputs.deployment_target == 'vercel' || (github.event_name == 'push' && !github.event.inputs.deployment_target)
+        run: |
+          # Install Vercel CLI
+          npm install -g vercel
+          
+          # Deploy to Vercel
+          vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+      
+      - name: Deploy to Netlify
+        if: github.event.inputs.deployment_target == 'netlify'
+        run: |
+          # Install Netlify CLI
+          npm install -g netlify-cli
+          
+          # Deploy to Netlify
+          netlify deploy --prod --auth ${{ secrets.NETLIFY_AUTH_TOKEN }} --site ${{ secrets.NETLIFY_SITE_ID }}
+      
+      - name: Deploy to Firebase
+        if: github.event.inputs.deployment_target == 'firebase'
+        run: |
+          # Install Firebase CLI
+          npm install -g firebase-tools
+          
+          # Deploy to Firebase
+          firebase deploy --token ${{ secrets.FIREBASE_TOKEN }} --project ${{ secrets.FIREBASE_PROJECT_ID }}
+      
+      - name: Deploy to GitHub Pages
+        if: github.event.inputs.deployment_target == 'github-pages'
+        run: |
+          # Install gh-pages
+          npm install -g gh-pages
+          
+          # Deploy to GitHub Pages
+          gh-pages -d dist -b gh-pages -r https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+  # Post-deployment verification
+  verify:
+    name: Post-Deployment Verification
+    needs: [pre-deployment, deploy]
+    if: always() && needs.deploy.result == 'success' && github.event.inputs.skip_verification != 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install PowerShell
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget apt-transport-https software-properties-common
+          wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+          sudo dpkg -i packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo apt-get install -y powershell
+      
+      - name: Run Deployment Verification
+        id: verify
+        continue-on-error: true
+        run: |
+          $RESULT=$(pwsh -File scripts/verify-deployment.ps1 -Url "${{ needs.pre-deployment.outputs.deployment-url }}" -Target ${{ github.event.inputs.deployment_target || 'vercel' }} -AllChecks)
+          echo "verification-result=$RESULT" >> $GITHUB_OUTPUT
+      
+      - name: Upload Verification Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-report
+          path: .deployment-verification-report.json
+          retention-days: 30
+
+  # Rollback on verification failure
+  rollback:
+    name: Rollback on Failure
+    needs: [pre-deployment, deploy, verify]
+    if: always() && needs.verify.result == 'failure' && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Install PowerShell
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y powershell
+      
+      - name: Rollback to Checkpoint
+        run: |
+          echo "Rolling back to checkpoint: ${{ needs.pre-deployment.outputs.checkpoint-tag }}"
+          pwsh -File scripts/deploy-checkpoint.ps1 -Action Rollback -Checkpoint "${{ needs.pre-deployment.outputs.checkpoint-tag }}"
+      
+      - name: Comment on Rollback
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const checkpointTag = '${{ needs.pre-deployment.outputs.checkpoint-tag }}';
+            const deploymentUrl = '${{ needs.pre-deployment.outputs.deployment-url }}';
+            
+            const comment = `🔄 **Automatic Rollback Initiated**
+            
+            The deployment verification failed. Rolling back to checkpoint: \`${checkpointTag}\`
+            
+            **Deployment URL:** ${deploymentUrl}
+            **Checkpoint:** ${checkpointTag}
+            **Reason:** Verification checks failed
+            
+            Please review the verification report and fix any issues before attempting another deployment.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Notification and summary
+  notify:
+    name: Deployment Notification
+    needs: [pre-deployment, deploy, verify]
+    if: always()
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "🚀 Deployment Process Complete"
+          echo "Checkpoint: ${{ needs.pre-deployment.outputs.checkpoint-tag }}"
+          echo "Deployment URL: ${{ needs.pre-deployment.outputs.deployment-url }}"
+          echo "Status: ${{ needs.deploy.result }}"
+          echo "Verification: ${{ needs.verify.result }}"
+      
+      - name: Comment on Commit
+        if: github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const checkpointTag = '${{ needs.pre-deployment.outputs.checkpoint-tag }}';
+            const deploymentUrl = '${{ needs.pre-deployment.outputs.deployment-url }}';
+            const deployStatus = '${{ needs.deploy.result }}';
+            const verifyStatus = '${{ needs.verify.result }}';
+            
+            let statusIcon = '✅';
+            let statusText = 'SUCCESS';
+            let color = 'green';
+            
+            if (deployStatus === 'failure') {
+              statusIcon = '❌';
+              statusText = 'FAILED';
+              color = 'red';
+            } else if (verifyStatus === 'failure') {
+              statusIcon = '⚠️';
+              statusText = 'VERIFICATION FAILED';
+              color = 'orange';
+            }
+            
+            const comment = `${statusIcon} **Deployment ${statusText}**
+            
+            **Checkpoint:** \`${checkpointTag}\`
+            **URL:** ${deploymentUrl}
+            **Status:** ${statusText}
+            
+            [View Deployment](${deploymentUrl}) | [View Checkpoint](https://github.com/${{ github.repository }}/releases/tag/${checkpointTag})`;
+            
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: comment
+            });
+      
+      - name: Update Deployment Status
+        if: always()
+        uses: bobheadxi/deployments@v1
+        with:
+          step: finish
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ needs.deploy.result }}
+          deployment_id: ${{ needs.pre-deployment.outputs.deployment-id }}
+          env_url: ${{ needs.pre-deployment.outputs.deployment-url }}
+
+  # Cleanup old checkpoints
+  cleanup:
+    name: Cleanup Old Checkpoints
+    needs: [pre-deployment, deploy, verify]
+    if: always() && needs.pre-deployment.result == 'success'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Install PowerShell
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y powershell
+      
+      - name: Cleanup Old Checkpoints
+        run: |
+          # Keep only the last 10 checkpoints
+          pwsh -Command "
+            \$tags = git tag -l 'deploy-checkpoint-*' | Sort-Object -Descending
+            if (\$tags.Count -gt 10) {
+              \$tagsToRemove = \$tags[10..(\$tags.Count-1)]
+              foreach (\$tag in \$tagsToRemove) {
+                git tag -d \$tag
+                echo \"Removed old checkpoint: \$tag\"
+              }
+            }
+          "

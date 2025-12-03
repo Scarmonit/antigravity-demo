@@ -44,6 +44,42 @@ npm run build
 npm run preview
 ```
 
+## Deployment
+
+This project includes an enhanced deployment system with automatic Git checkpointing:
+
+- **Quick Deploy**: See [Deployment Workflow](./.agent/workflows/deploy-with-checkpoints.md)
+- **Detailed Guide**: See [Checkpoint Documentation](./docs/deployment-checkpoints.md)
+- **Original Workflow**: See [Basic Deployment](./.agent/workflows/deploy.md)
+
+### One-Command Deploy
+
+```bash
+npm run deploy:prod
+```
+
+This will:
+- Run production build
+- Create Git checkpoint
+- Deploy to configured platform
+- Verify deployment success
+
+### Quick Rollback
+
+```bash
+npm run deploy:rollback
+```
+
+### Deployment Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run deploy:checkpoint` | Create deployment checkpoint |
+| `npm run deploy:verify` | Verify deployment |
+| `npm run deploy:rollback` | Rollback to previous |
+| `npm run deploy:list` | List all checkpoints |
+| `npm run deploy:prod` | Full deploy workflow |
+
 ## Antigravity Workflows
 
 This project includes automated workflow documentation:
@@ -51,6 +87,7 @@ This project includes automated workflow documentation:
 - **[quickstart.md](.agent/workflows/quickstart.md)** - Getting started guide
 - **[test-app.md](.agent/workflows/test-app.md)** - Testing procedures
 - **[deploy.md](.agent/workflows/deploy.md)** - Deployment guide
+- **[deploy-with-checkpoints.md](.agent/workflows/deploy-with-checkpoints.md)** - Enhanced deployment
 - **[mcp-integration.md](.agent/workflows/mcp-integration.md)** - MCP server setup
 
 Use Antigravity slash commands:

@@ -16,7 +16,12 @@
         "typecheck": "tsc --noEmit",
         "test": "vitest",
         "test:unit": "vitest run",
-        "test:coverage": "vitest run --coverage"
+        "test:coverage": "vitest run --coverage",
+        "deploy:checkpoint": "pwsh -File scripts/deploy-checkpoint.ps1 -Action Create",
+        "deploy:verify": "pwsh -File scripts/verify-deployment.ps1",
+        "deploy:rollback": "pwsh -File scripts/deploy-checkpoint.ps1 -Action Rollback",
+        "deploy:list": "pwsh -File scripts/deploy-checkpoint.ps1 -Action List",
+        "deploy:prod": "npm run build && npm run deploy:checkpoint && npm run deploy:verify"
     },
     "dependencies": {
         "react": "^18.3.1",

@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .github_mcp_token
+
+# Deployment artifacts
+.deployment-metadata.json
+.deployment-verification-report.json
