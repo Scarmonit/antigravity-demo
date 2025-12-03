@@ -68,8 +68,8 @@ const RAGShowcase: React.FC = React.memo(() => {
             </div>
 
             <div className="rag-tools">
-                {filteredTools.map((tool, index) => (
-                    <div key={index} className="rag-tool">
+                {filteredTools.map((tool) => (
+                    <div key={tool.name} className="rag-tool">
                         <code className="rag-tool-name">{tool.name}</code>
                         <span className="rag-tool-desc">{tool.description}</span>
                     </div>

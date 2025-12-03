@@ -62,8 +62,8 @@ const MCPShowcase: React.FC = React.memo(() => {
             </div>
 
             <div className="mcp-servers">
-                {mcpServers.map((server, index) => (
-                    <div key={index} className="mcp-server">
+                {mcpServers.map((server) => (
+                    <div key={server.name} className="mcp-server">
                         <div className="mcp-server-header">
                             <span className="mcp-server-icon">{server.icon}</span>
                             <span className="mcp-server-name">{server.name}</span>

@@ -6,8 +6,8 @@ const WorkflowsCard: React.FC = React.memo(() => {
     <div className="info-card">
       <h2>Available Workflows</h2>
       <div className="workflows">
-        {workflows.map((workflow, index) => (
-          <div className="workflow" key={index}>
+        {workflows.map((workflow) => (
+          <div className="workflow" key={workflow.id}>
             <h3>{workflow.title}</h3>
             <p>{workflow.description}</p>
           </div>
@@ -16,5 +16,7 @@ const WorkflowsCard: React.FC = React.memo(() => {
     </div>
   );
 });
+
+WorkflowsCard.displayName = 'WorkflowsCard';
 
 export default WorkflowsCard;

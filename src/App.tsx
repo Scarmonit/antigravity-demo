@@ -5,6 +5,7 @@ import StatsBar from './components/StatsBar';
 import InteractiveCounter from './components/InteractiveCounter';
 import FeaturesCard from './components/FeaturesCard';
 import Footer from './components/Footer';
+import { features } from './data/features';
 
 // Lazy-loaded components for better initial load performance
 const FirebaseCard = lazy(() => import('./components/FirebaseCard'));
@@ -21,27 +22,16 @@ const LoadingCard = () => (
   </div>
 );
 
+// Static data moved outside component
+const stats = {
+  workflows: 5,
+  tools: 25,
+  deployments: '∞',
+};
+
 function App() {
   const [count, setCount] = useState(0);
-  const [features, setFeatures] = useState<string[]>([]);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [stats] = useState({
-    workflows: 5,
-    tools: 25,
-    deployments: '∞',
-  });
-
-  useEffect(() => {
-    // Demonstrate Antigravity features
-    setFeatures([
-      '✅ Full automation with turbo-mode workflows',
-      '✅ Browser subagent for automated testing',
-      '✅ MCP server integration (25+ development tools)',
-      '✅ React + TypeScript + Vite',
-      '✅ Complete documentation and guides',
-      '🔥 Particle effects and advanced animations',
-    ]);
-  }, []);
 
   useEffect(() => {
     document.body.className = theme;

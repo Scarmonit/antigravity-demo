@@ -1,7 +1,8 @@
 import React from 'react';
+import { Feature } from '../data/features';
 
 interface FeaturesCardProps {
-  features: string[];
+  features: Feature[];
 }
 
 const FeaturesCard: React.FC<FeaturesCardProps> = React.memo(({ features }) => {
@@ -9,14 +10,16 @@ const FeaturesCard: React.FC<FeaturesCardProps> = React.memo(({ features }) => {
     <div className="features-card">
       <h2>Antigravity Features</h2>
       <ul className="features-list">
-        {features.map((feature, index) => (
-          <li key={index} className="feature-item">
-            {feature}
+        {features.map((feature) => (
+          <li key={feature.id} className="feature-item">
+            {feature.text}
           </li>
         ))}
       </ul>
     </div>
   );
 });
+
+FeaturesCard.displayName = 'FeaturesCard';
 
 export default FeaturesCard;
