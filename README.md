@@ -132,3 +132,10 @@ This project demonstrates:
 ---
 
 **Created with Antigravity** • Node.js v22.21.0 • npm 11.6.4
+
+## Live Deployments
+
+🚀 **GitHub Pages**: [https://scarmonit.github.io/antigravity-demo/](https://scarmonit.github.io/antigravity-demo/)
+
+🔥 **Vercel** (Recommended): [https://antigravity-demo-rho.vercel.app/](https://antigravity-demo-rho.vercel.app/)
+
