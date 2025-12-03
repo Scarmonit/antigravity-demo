@@ -12,12 +12,25 @@ param(
     [switch]$WhatIf
 )
 
+# Git executable resolution
+$Script:GitExe = if (Get-Command git -ErrorAction SilentlyContinue) {
+    "git"
+} elseif (Test-Path "C:\ProgramData\chocolatey\bin\git.bat") {
+    "C:\ProgramData\chocolatey\bin\git.bat"
+} elseif (Test-Path "C:\Program Files\Git\bin\git.exe") {
+    "C:\Program Files\Git\bin\git.exe"
+} else {
+    Write-Error "Git not found. Please install Git."
+    exit 1
+}
+
 # Configuration
 $Script:Config = @{
     TagPrefix = "deploy-checkpoint"
     MaxCheckpoints = 10
     DefaultTarget = "vercel"
     MetadataFile = ".deployment-metadata.json"
+    GitCommand = $Script:GitExe
 }
 
 # Utility Functions
@@ -103,17 +116,17 @@ function New-DeploymentCheckpoint {
     # Create checkpoint tag
     $tagName = "$($Script:Config.TagPrefix)-$timestamp-$Target"
     
-    # Create metadata
+    # Create metadata (with safe values for CI environments)
     $metadata = @{
         timestamp = $timestamp
         branch = $branch
         commit = $commit
         target = $Target
         createdAt = Get-Date -Format "o"
-        user = $env:USERNAME
-        hostname = $env:COMPUTERNAME
-        nodeVersion = node --version
-        npmVersion = npm --version
+        user = if ($env:CI) { "ci-automation" } else { $env:USERNAME }
+        hostname = if ($env:CI) { "ci-runner" } else { $env:COMPUTERNAME }
+        nodeVersion = try { node --version } catch { "not-installed" }
+        npmVersion = try { npm --version } catch { "not-installed" }
     }
     
     if ($WhatIf) {
@@ -257,29 +270,33 @@ function Restore-DeploymentCheckpoint {
         # Stash current changes if any
         $gitStatus = Get-GitStatus
         $stashName = "pre-rollback-$(Get-Timestamp)"
-        
+        $stashCreated = $false
+
         if (-not $gitStatus.IsClean) {
             Write-ColorOutput "💾 Stashing current changes..." "Blue"
             git stash push -m $stashName
+            if ($LASTEXITCODE -eq 0) {
+                $stashCreated = $true
+            }
         }
-        
+
         # Checkout checkpoint
         Write-ColorOutput "📍 Checking out checkpoint..." "Blue"
         git checkout $Checkpoint
-        
+
         Write-ColorOutput "✅ Checkpoint restored successfully!" "Green"
         Write-ColorOutput "Restored to: $Checkpoint" "Green"
-        
+
         # Show restoration info
         $restoredCommit = Get-LastCommit
         Write-ColorOutput "Now at commit: $restoredCommit" "Green"
-        
+
         Write-ColorOutput "`n💡 To return to previous state:" "Cyan"
         Write-ColorOutput "git checkout $currentBranch" "Cyan"
-        if (-not $gitStatus.IsClean) {
+        if ($stashCreated) {
             Write-ColorOutput "git stash pop" "Cyan"
         }
-        
+
     } catch {
         throw "Failed to restore checkpoint: $_"
     }
@@ -329,22 +346,23 @@ function Cleanup-OldCheckpoints {
     param(
         [string]$Target
     )
-    
+
     try {
         $pattern = "$($Script:Config.TagPrefix)-*-$Target"
         $tags = git tag -l $pattern | Sort-Object
-        
-        if ($tags.Count -gt $Script:Config.MaxCheckpoints) {
-            $tagsToRemove = $tags[0..($tags.Count - $Script:Config.MaxCheckpoints - 1)]
-            
+
+        $removeCount = $tags.Count - $Script:Config.MaxCheckpoints
+        if ($removeCount -gt 0) {
+            $tagsToRemove = $tags[0..($removeCount - 1)]
+
             Write-ColorOutput "🧹 Cleaning up old checkpoints..." "Blue"
-            
+
             foreach ($tag in $tagsToRemove) {
                 git tag -d $tag
                 Write-ColorOutput "Removed old checkpoint: $tag" "Gray"
             }
         }
-        
+
     } catch {
         Write-Warning "Failed to cleanup old checkpoints: $_"
     }

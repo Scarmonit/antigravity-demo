@@ -16,15 +16,15 @@ param(
 
 # Configuration
 $Script:Config = @{
-    DefaultUrl = "https://antigravity-demo-rho.vercel.app"
-    TimeoutSeconds = 30
-    RetryCount = 3
-    RetryDelay = 5
+    DefaultUrl = if ($env:DEPLOY_URL) { $env:DEPLOY_URL } else { "https://antigravity-demo-rho.vercel.app" }
+    TimeoutSeconds = if ($env:TIMEOUT_SECONDS) { [int]$env:TIMEOUT_SECONDS } else { 30 }
+    RetryCount = if ($env:RETRY_COUNT) { [int]$env:RETRY_COUNT } else { 3 }
+    RetryDelay = if ($env:RETRY_DELAY) { [int]$env:RETRY_DELAY } else { 5 }
     PerformanceBudget = @{
-        FCP = 2000    # First Contentful Paint (ms)
-        LCP = 3000    # Largest Contentful Paint (ms)
-        TTI = 5000    # Time to Interactive (ms)
-        CLS = 0.1     # Cumulative Layout Shift
+        FCP = if ($env:PERF_BUDGET_FCP) { [int]$env:PERF_BUDGET_FCP } else { 2000 }    # First Contentful Paint (ms)
+        LCP = if ($env:PERF_BUDGET_LCP) { [int]$env:PERF_BUDGET_LCP } else { 3000 }    # Largest Contentful Paint (ms)
+        TTI = if ($env:PERF_BUDGET_TTI) { [int]$env:PERF_BUDGET_TTI } else { 5000 }    # Time to Interactive (ms)
+        CLS = if ($env:PERF_BUDGET_CLS) { [decimal]$env:PERF_BUDGET_CLS } else { 0.1 } # Cumulative Layout Shift
     }
 }
 
@@ -41,6 +41,22 @@ function Write-VerboseOutput {
     param([string]$Message)
     if ($Verbose) {
         Write-ColorOutput $Message "Gray"
+    }
+}
+
+function Test-UrlFormat {
+    param([string]$Url)
+
+    try {
+        $uri = [System.Uri]$Url
+        if ($uri.Scheme -notin @('http', 'https')) {
+            throw "URL must use HTTP or HTTPS protocol"
+        }
+        return $true
+    } catch [System.UriFormatException] {
+        throw "Invalid URL format: $Url"
+    } catch {
+        throw $_
     }
 }
 
@@ -70,25 +86,25 @@ function Test-Url {
 
 function Test-Assets {
     param([string]$BaseUrl)
-    
+
     Write-ColorOutput "🔍 Testing asset loading..." "Cyan"
-    
+
     $assets = @(
         "/assets/index.css",
         "/assets/index.js",
         "/vite.svg",
         "/react.svg"
     )
-    
+
     $results = @()
     $failed = 0
-    
+
     foreach ($asset in $assets) {
         $assetUrl = "$BaseUrl$asset"
         Write-VerboseOutput "Testing asset: $assetUrl"
-        
+
         try {
-            $response = Invoke-WebRequest -Uri $assetUrl -Method HEAD -TimeoutSec 10
+            $response = Invoke-WebRequest -Uri $assetUrl -Method HEAD -TimeoutSec $Script:Config.TimeoutSeconds -ErrorAction Stop
             $results += @{
                 Asset = $asset
                 Status = $response.StatusCode
@@ -130,9 +146,9 @@ function Test-CoreFunctionality {
         },
         @{
             Name = "Theme Toggle Button"
-            Test = { 
+            Test = {
                 try {
-                    $response = Invoke-WebRequest -Uri $Url -TimeoutSec 10
+                    $response = Invoke-WebRequest -Uri $Url -TimeoutSec $Script:Config.TimeoutSeconds -ErrorAction Stop
                     return $response.Content -match 'theme-toggle'
                 } catch {
                     return $false
@@ -141,9 +157,9 @@ function Test-CoreFunctionality {
         },
         @{
             Name = "Counter Component"
-            Test = { 
+            Test = {
                 try {
-                    $response = Invoke-WebRequest -Uri $Url -TimeoutSec 10
+                    $response = Invoke-WebRequest -Uri $Url -TimeoutSec $Script:Config.TimeoutSeconds -ErrorAction Stop
                     return $response.Content -match 'counter'
                 } catch {
                     return $false
@@ -152,9 +168,9 @@ function Test-CoreFunctionality {
         },
         @{
             Name = "MCP Showcase"
-            Test = { 
+            Test = {
                 try {
-                    $response = Invoke-WebRequest -Uri $Url -TimeoutSec 10
+                    $response = Invoke-WebRequest -Uri $Url -TimeoutSec $Script:Config.TimeoutSeconds -ErrorAction Stop
                     return $response.Content -match 'MCP Showcase'
                 } catch {
                     return $false
@@ -163,9 +179,9 @@ function Test-CoreFunctionality {
         },
         @{
             Name = "RAG Showcase"
-            Test = { 
+            Test = {
                 try {
-                    $response = Invoke-WebRequest -Uri $Url -TimeoutSec 10
+                    $response = Invoke-WebRequest -Uri $Url -TimeoutSec $Script:Config.TimeoutSeconds -ErrorAction Stop
                     return $response.Content -match 'RAG Showcase'
                 } catch {
                     return $false
@@ -229,7 +245,7 @@ function Test-Performance {
         $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
         
         try {
-            $response = Invoke-WebRequest -Uri $Url -TimeoutSec $Script:Config.TimeoutSeconds
+            $response = Invoke-WebRequest -Uri $Url -TimeoutSec $Script:Config.TimeoutSeconds -ErrorAction Stop
             $stopwatch.Stop()
             
             $timings += @{
@@ -290,7 +306,7 @@ function Test-Accessibility {
     
     # Basic accessibility checks that can be done without browser automation
     try {
-        $response = Invoke-WebRequest -Uri $Url -TimeoutSec $Script:Config.TimeoutSeconds
+        $response = Invoke-WebRequest -Uri $Url -TimeoutSec $Script:Config.TimeoutSeconds -ErrorAction Stop
         
         $checks = @(
             @{
@@ -380,8 +396,8 @@ function Test-ConsoleErrors {
     # For now, we'll check if the page loads basic JavaScript
     
     try {
-        $response = Invoke-WebRequest -Uri $Url -TimeoutSec $Script:Config.TimeoutSeconds
-        
+        $response = Invoke-WebRequest -Uri $Url -TimeoutSec $Script:Config.TimeoutSeconds -ErrorAction Stop
+
         # Check for common JavaScript error indicators in HTML
         $errorIndicators = @(
             'console\.error',
@@ -478,11 +494,19 @@ function New-VerificationReport {
 try {
     # Determine which checks to run
     $runAll = $AllChecks -or (-not $Health -and -not $Assets -and -not $Functionality -and -not $Performance -and -not $Accessibility -and -not $Console)
-    
+
     if ([string]::IsNullOrEmpty($Url)) {
         $Url = $Script:Config.DefaultUrl
     }
-    
+
+    # Validate URL format
+    try {
+        Test-UrlFormat -Url $Url
+    } catch {
+        Write-ColorOutput "❌ URL Validation Error: $_" "Red"
+        exit 1
+    }
+
     Write-ColorOutput "🔍 Starting deployment verification for: $Url" "Cyan"
     Write-ColorOutput "Target: $Target" "Cyan"
     Write-ColorOutput "Timestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" "Cyan"
