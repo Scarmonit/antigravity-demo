@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import './App.css';
 import Header from './components/Header';
 import StatsBar from './components/StatsBar';
@@ -47,13 +47,13 @@ function App() {
     document.body.className = theme;
   }, [theme]);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  }, []);
 
-  const resetCounter = () => {
+  const resetCounter = useCallback(() => {
     setCount(0);
-  };
+  }, []);
 
   return (
     <div className={`app theme-${theme}`}>

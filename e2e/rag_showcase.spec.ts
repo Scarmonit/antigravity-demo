@@ -28,6 +28,9 @@ test.describe('RAG Showcase Interactivity', () => {
     await ingestButton.click();
     await expect(ingestButton).toHaveClass(/active/);
 
+    // Wait for the first new tool to be visible to avoid race conditions
+    await expect(page.getByText('add_document', { exact: true })).toBeVisible();
+
     const ingestTools = ['add_document', 'add_documents_batch', 'ingest_file', 'ingest_url', 'chunk_document'];
     for (const tool of ingestTools) {
       await expect(page.getByText(tool, { exact: true })).toBeVisible();
@@ -41,6 +44,9 @@ test.describe('RAG Showcase Interactivity', () => {
     const manageButton = page.locator('button.rag-category', { hasText: 'Manage' });
     await manageButton.click();
     await expect(manageButton).toHaveClass(/active/);
+
+    // Wait for the first new tool to be visible to avoid race conditions
+    await expect(page.getByText('list_sources', { exact: true })).toBeVisible();
 
     const manageTools = ['list_sources', 'delete_source', 'export_documents', 'get_stats', 'health_check'];
     for (const tool of manageTools) {

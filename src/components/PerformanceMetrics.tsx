@@ -33,6 +33,32 @@ const formatValue = (name: string, value: number): string => {
   return Math.round(value).toString();
 };
 
+const getRatingColor = (rating: string): string => {
+  switch (rating) {
+    case 'good':
+      return '#22c55e';
+    case 'needs-improvement':
+      return '#eab308';
+    case 'poor':
+      return '#ef4444';
+    default:
+      return '#6b7280';
+  }
+};
+
+const getRatingEmoji = (rating: string): string => {
+  switch (rating) {
+    case 'good':
+      return '✓';
+    case 'needs-improvement':
+      return '△';
+    case 'poor':
+      return '✗';
+    default:
+      return '○';
+  }
+};
+
 const PerformanceMetrics: React.FC = React.memo(() => {
   const [metrics, setMetrics] = useState<Record<string, VitalMetric>>({
     LCP: {
@@ -92,32 +118,6 @@ const PerformanceMetrics: React.FC = React.memo(() => {
     onFCP(handleMetric);
     onTTFB(handleMetric);
   }, []);
-
-  const getRatingColor = (rating: string): string => {
-    switch (rating) {
-      case 'good':
-        return '#22c55e';
-      case 'needs-improvement':
-        return '#eab308';
-      case 'poor':
-        return '#ef4444';
-      default:
-        return '#6b7280';
-    }
-  };
-
-  const getRatingEmoji = (rating: string): string => {
-    switch (rating) {
-      case 'good':
-        return '✓';
-      case 'needs-improvement':
-        return '△';
-      case 'poor':
-        return '✗';
-      default:
-        return '○';
-    }
-  };
 
   const coreVitals = ['LCP', 'INP', 'CLS'];
   const otherVitals = ['FCP', 'TTFB'];
@@ -197,5 +197,7 @@ const PerformanceMetrics: React.FC = React.memo(() => {
     </div>
   );
 });
+
+PerformanceMetrics.displayName = 'PerformanceMetrics';
 
 export default PerformanceMetrics;

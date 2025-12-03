@@ -23,7 +23,9 @@ jobs:
         with:
           node-version: 20
           cache: npm
+      - run: npm install --save-dev @playwright/test && npx playwright install --with-deps
       - run: npm ci
+      - run: npm run test:e2e
       - run: npm run build
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3

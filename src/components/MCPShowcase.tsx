@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 interface MCPServer {
     name: string;
@@ -8,7 +8,7 @@ interface MCPServer {
 }
 
 const MCPShowcase: React.FC = React.memo(() => {
-    const [mcpServers] = useState<MCPServer[]>([
+    const mcpServers: MCPServer[] = [
         {
             name: 'Antigravity Tools',
             tools: 6,
@@ -39,14 +39,9 @@ const MCPShowcase: React.FC = React.memo(() => {
             status: 'active',
             icon: '🔍',
         },
-    ]);
+    ];
 
-    const [activeTools, setActiveTools] = useState(0);
-
-    useEffect(() => {
-        const total = mcpServers.reduce((sum, server) => sum + server.tools, 0);
-        setActiveTools(total);
-    }, [mcpServers]);
+    const activeTools = mcpServers.reduce((sum, server) => sum + server.tools, 0);
 
     return (
         <div className="card mcp-showcase">
@@ -89,5 +84,7 @@ const MCPShowcase: React.FC = React.memo(() => {
         </div>
     );
 });
+
+MCPShowcase.displayName = 'MCPShowcase';
 
 export default MCPShowcase;
