@@ -9,13 +9,17 @@ describe('FirebaseCard', () => {
         expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('Firebase Integration')
     })
 
-    it('renders all Firebase features', () => {
+    it('renders all Firebase feature headings', () => {
         render(<FirebaseCard />)
 
-        expect(screen.getByText('Connected Apps')).toBeInTheDocument()
-        expect(screen.getByText('Firestore')).toBeInTheDocument()
-        expect(screen.getByText('Authentication')).toBeInTheDocument()
-        expect(screen.getByText('Cloud Functions')).toBeInTheDocument()
+        const h3Headings = screen.getAllByRole('heading', { level: 3 })
+        expect(h3Headings).toHaveLength(4)
+
+        // Check the feature titles exist (they include emojis)
+        expect(screen.getByText(/Connected Apps/i)).toBeInTheDocument()
+        expect(screen.getByText(/Firestore/i)).toBeInTheDocument()
+        expect(screen.getByText(/Authentication/i)).toBeInTheDocument()
+        expect(screen.getByText(/Cloud Functions/i)).toBeInTheDocument()
     })
 
     it('displays feature descriptions', () => {

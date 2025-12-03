@@ -15,23 +15,23 @@ describe('Header', () => {
         const mockToggleTheme = vi.fn()
         render(<Header theme="dark" toggleTheme={mockToggleTheme} />)
 
-        const button = screen.getByRole('button', { name: /toggle theme/i })
-        expect(button).toHaveTextContent('\u2600\uFE0F') // Sun emoji
+        const button = screen.getByTitle('Toggle Theme')
+        expect(button.textContent).toContain('\u2600') // Sun emoji (without variant selector)
     })
 
     it('displays moon emoji when theme is light', () => {
         const mockToggleTheme = vi.fn()
         render(<Header theme="light" toggleTheme={mockToggleTheme} />)
 
-        const button = screen.getByRole('button', { name: /toggle theme/i })
-        expect(button).toHaveTextContent('\uD83C\uDF19') // Moon emoji
+        const button = screen.getByTitle('Toggle Theme')
+        expect(button.textContent).toContain('\uD83C\uDF19') // Moon emoji
     })
 
     it('calls toggleTheme when button is clicked', () => {
         const mockToggleTheme = vi.fn()
         render(<Header theme="dark" toggleTheme={mockToggleTheme} />)
 
-        const button = screen.getByRole('button', { name: /toggle theme/i })
+        const button = screen.getByTitle('Toggle Theme')
         fireEvent.click(button)
 
         expect(mockToggleTheme).toHaveBeenCalledTimes(1)

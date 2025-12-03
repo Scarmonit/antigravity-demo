@@ -51,11 +51,13 @@ describe('App', () => {
         expect(screen.getByRole('contentinfo')).toBeInTheDocument()
     })
 
-    it('renders the counter with initial value 0', () => {
+    it('renders the counter component', () => {
         render(<App />)
 
         expect(screen.getByText('Interactive Counter')).toBeInTheDocument()
-        expect(screen.getByText('0')).toBeInTheDocument()
+        // Check for counter value in counter-value span
+        const counterValue = document.querySelector('.counter-value')
+        expect(counterValue).toHaveTextContent('0')
     })
 
     it('increments counter on button click', async () => {
@@ -65,7 +67,8 @@ describe('App', () => {
         fireEvent.click(incrementButton)
 
         await waitFor(() => {
-            expect(screen.getByText('1')).toBeInTheDocument()
+            const counterValue = document.querySelector('.counter-value')
+            expect(counterValue).toHaveTextContent('1')
         })
     })
 
@@ -80,22 +83,23 @@ describe('App', () => {
         fireEvent.click(resetButton)
 
         await waitFor(() => {
-            expect(screen.getByText('0')).toBeInTheDocument()
+            const counterValue = document.querySelector('.counter-value')
+            expect(counterValue).toHaveTextContent('0')
         })
     })
 
     it('toggles theme on button click', () => {
         render(<App />)
 
-        const themeButton = screen.getByRole('button', { name: /toggle theme/i })
+        const themeButton = screen.getByTitle('Toggle Theme')
 
         // Initially dark theme (shows sun)
-        expect(themeButton).toHaveTextContent('\u2600\uFE0F')
+        expect(themeButton.textContent).toContain('\u2600')
 
         fireEvent.click(themeButton)
 
         // After toggle, light theme (shows moon)
-        expect(themeButton).toHaveTextContent('\uD83C\uDF19')
+        expect(themeButton.textContent).toContain('\uD83C\uDF19')
     })
 
     it('updates body class on theme change', () => {
@@ -103,7 +107,7 @@ describe('App', () => {
 
         expect(document.body.className).toBe('dark')
 
-        const themeButton = screen.getByRole('button', { name: /toggle theme/i })
+        const themeButton = screen.getByTitle('Toggle Theme')
         fireEvent.click(themeButton)
 
         expect(document.body.className).toBe('light')
@@ -131,7 +135,7 @@ describe('App', () => {
         const app = container.querySelector('.app')
         expect(app).toHaveClass('theme-dark')
 
-        const themeButton = screen.getByRole('button', { name: /toggle theme/i })
+        const themeButton = screen.getByTitle('Toggle Theme')
         fireEvent.click(themeButton)
 
         expect(app).toHaveClass('theme-light')

@@ -13,7 +13,8 @@ describe('RAGShowcase', () => {
         render(<RAGShowcase />)
 
         expect(screen.getByText(/Semantic document search/i)).toBeInTheDocument()
-        expect(screen.getByText(/ChromaDB/i)).toBeInTheDocument()
+        // Check for ONNX instead of ChromaDB (ChromaDB appears multiple times)
+        expect(screen.getByText(/ONNX embeddings/i)).toBeInTheDocument()
     })
 
     it('displays feature stats', () => {
@@ -88,11 +89,13 @@ describe('RAGShowcase', () => {
     })
 
     it('renders tech badges', () => {
-        render(<RAGShowcase />)
+        const { container } = render(<RAGShowcase />)
 
-        expect(screen.getByText('ChromaDB')).toBeInTheDocument()
-        expect(screen.getByText('MiniLM-L6-v2')).toBeInTheDocument()
-        expect(screen.getByText('FastMCP')).toBeInTheDocument()
+        const techBadges = container.querySelectorAll('.rag-tech-badge')
+        expect(techBadges.length).toBe(3)
+        expect(techBadges[0]).toHaveTextContent('ChromaDB')
+        expect(techBadges[1]).toHaveTextContent('MiniLM-L6-v2')
+        expect(techBadges[2]).toHaveTextContent('FastMCP')
     })
 
     it('has correct CSS classes', () => {
