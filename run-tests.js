@@ -4,7 +4,7 @@ import { join } from 'path';
 try {
   console.log('Running all E2E tests...');
   const projectDir = 'c:\\Users\\scarm\\antigravity-demo';
-  execSync('npm run test:e2e', {
+  execSync('npx playwright test', {
     stdio: 'inherit',
     cwd: projectDir
   });

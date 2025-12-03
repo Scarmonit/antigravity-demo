@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: 'html',
   timeout: 60000,
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:5174',
+    baseURL: 'http://localhost:5176',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -20,10 +20,4 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: process.env.BASE_URL || 'http://localhost:5174',
-    reuseExistingServer: true,
-    timeout: 180000,
-  },
 });

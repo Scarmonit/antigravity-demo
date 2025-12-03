@@ -7,45 +7,48 @@ interface MCPServer {
     icon: string;
 }
 
-const MCPShowcase: React.FC = React.memo(() => {
-    const mcpServers: MCPServer[] = [
-        {
-            name: 'Antigravity Tools',
-            tools: 6,
-            status: 'active',
-            icon: '🛠️',
-        },
-        {
-            name: 'GitHub MCP',
-            tools: 12,
-            status: 'active',
-            icon: '🐙',
-        },
-        {
-            name: 'Sequential Thinking',
-            tools: 3,
-            status: 'active',
-            icon: '🧠',
-        },
-        {
-            name: 'Workspace Context',
-            tools: 4,
-            status: 'active',
-            icon: '📁',
-        },
-        {
-            name: 'RAG Server',
-            tools: 13,
-            status: 'active',
-            icon: '🔍',
-        },
-    ];
+// Static data moved to module scope - prevents recreation on every render
+const mcpServers: MCPServer[] = [
+    {
+        name: 'Antigravity Tools',
+        tools: 6,
+        status: 'active',
+        icon: '🛠️',
+    },
+    {
+        name: 'GitHub MCP',
+        tools: 12,
+        status: 'active',
+        icon: '🐙',
+    },
+    {
+        name: 'Sequential Thinking',
+        tools: 3,
+        status: 'active',
+        icon: '🧠',
+    },
+    {
+        name: 'Workspace Context',
+        tools: 4,
+        status: 'active',
+        icon: '📁',
+    },
+    {
+        name: 'RAG Server',
+        tools: 13,
+        status: 'active',
+        icon: '🔍',
+    },
+];
 
-    const activeTools = mcpServers.reduce((sum, server) => sum + server.tools, 0);
+// Pre-calculated since data is static
+const activeTools = mcpServers.reduce((sum, server) => sum + server.tools, 0);
+
+const MCPShowcase: React.FC = React.memo(() => {
 
     return (
         <div className="card mcp-showcase">
-            <h2>🔌 MCP Integration</h2>
+            <h2>MCP Integration</h2>
             <p className="mcp-description">
                 Model Context Protocol servers powering Antigravity's capabilities
             </p>

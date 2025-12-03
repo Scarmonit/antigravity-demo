@@ -5,14 +5,15 @@ import StatsBar from './components/StatsBar';
 import InteractiveCounter from './components/InteractiveCounter';
 import FeaturesCard from './components/FeaturesCard';
 import Footer from './components/Footer';
+import ErrorBoundary from './components/ErrorBoundary';
+import MCPShowcase from './components/MCPShowcase';
+import RAGShowcase from './components/RAGShowcase';
 import { features } from './data/features';
 
 // Lazy-loaded components for better initial load performance
 const FirebaseCard = lazy(() => import('./components/FirebaseCard'));
 const WorkflowsCard = lazy(() => import('./components/WorkflowsCard'));
 const ParticleBackground = lazy(() => import('./components/ParticleBackground'));
-const MCPShowcase = lazy(() => import('./components/MCPShowcase'));
-const RAGShowcase = lazy(() => import('./components/RAGShowcase'));
 const PerformanceMetrics = lazy(() => import('./components/PerformanceMetrics'));
 
 // Loading fallback component
@@ -59,21 +60,27 @@ function App() {
           resetCounter={resetCounter}
         />
         <FeaturesCard features={features} />
-        <Suspense fallback={<LoadingCard />}>
+        <ErrorBoundary>
           <MCPShowcase />
-        </Suspense>
-        <Suspense fallback={<LoadingCard />}>
+        </ErrorBoundary>
+        <ErrorBoundary>
           <RAGShowcase />
-        </Suspense>
-        <Suspense fallback={<LoadingCard />}>
-          <PerformanceMetrics />
-        </Suspense>
-        <Suspense fallback={<LoadingCard />}>
-          <FirebaseCard />
-        </Suspense>
-        <Suspense fallback={<LoadingCard />}>
-          <WorkflowsCard />
-        </Suspense>
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingCard />}>
+            <PerformanceMetrics />
+          </Suspense>
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingCard />}>
+            <FirebaseCard />
+          </Suspense>
+        </ErrorBoundary>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingCard />}>
+            <WorkflowsCard />
+          </Suspense>
+        </ErrorBoundary>
       </main>
       <Footer />
     </div>

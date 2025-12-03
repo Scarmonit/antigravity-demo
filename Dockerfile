@@ -1,62 +1,38 @@
-# Multi-stage Dockerfile for Antigravity Demo
-# Optimized for production deployment
+# syntax=docker/dockerfile:1
 
-# ============================================
-# Build Stage
-# ============================================
-FROM node:20-alpine AS build
+ARG NODE_VERSION=20
 
-# Set working directory
-WORKDIR /app
+###############################
+# Stage 1: Build dependencies #
+###############################
+FROM node:${NODE_VERSION}-alpine AS builder
 
-# Copy package files for dependency installation
+WORKDIR /usr/src/app
+
+# Copy only package management files first to optimize cache
 COPY package*.json ./
 
-# Install dependencies
-# Use ci for faster, more reliable builds
-RUN npm ci
+# Install only production dependencies; use cache mount for npm cache
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev
 
-# Copy source code
-COPY . .
+# Copy the rest of the app source
+COPY src ./src
 
-# Build application
-# Set NODE_ENV and build for production
-ENV NODE_ENV=production
-RUN npm run build
+###############################
+# Stage 2: Minimal runtime    #
+###############################
+FROM node:${NODE_VERSION}-alpine AS runtime
+# (If a node:20-slim existed, you’d typically use the slim variant
+# as the final stage in the same way as shown for Node in the docs.[[Slim images]](https://docs.docker.com/docker-hub/image-library/trusted-content/#slim-images))
 
-# ============================================
-# Production Stage
-# ============================================
-FROM nginx:alpine
+WORKDIR /usr/src/app
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# Run as non-root for better security
+USER node
 
-# Copy custom nginx configuration
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy app from builder, owned by non-root user
+COPY --from=builder --chown=node:node /usr/src/app /usr/src/app
 
-# Copy built application from build stage
-COPY --from=build /app/dist /usr/share/nginx/html
-
-# Create non-root user for security
-RUN addgroup -g 1001 -S nginx-app && \
-    adduser -S -D -H -u 1001 -h /usr/share/nginx/html -s /sbin/nologin -G nginx-app -g nginx-app nginx-app && \
-    chown -R nginx-app:nginx-app /usr/share/nginx/html && \
-    chown -R nginx-app:nginx-app /var/cache/nginx && \
-    chown -R nginx-app:nginx-app /var/log/nginx && \
-    chown -R nginx-app:nginx-app /etc/nginx/conf.d && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx-app:nginx-app /var/run/nginx.pid
-
-# Switch to non-root user
-USER nginx-app
-
-# Expose port 80
-EXPOSE 80
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 3000
+CMD ["node", "src/index.js"]
