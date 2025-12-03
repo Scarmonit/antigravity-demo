@@ -1,0 +1,28 @@
+# Dockerfile.dev - Development-optimized build
+# Includes hot-reload and development tools
+
+FROM node:20-alpine
+
+# Install development tools
+RUN apk add --no-cache git curl
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (including devDependencies)
+RUN npm install
+
+# Copy source code
+COPY . .
+
+# Expose Vite dev server port
+EXPOSE 5174
+
+# Expose preview server port
+EXPOSE 4173
+
+# Start development server with hot-reload
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

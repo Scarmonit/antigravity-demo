@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Production web server
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: antigravity-demo:latest
+    container_name: antigravity-demo-prod
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - antigravity-network
+
+  # Development server with hot-reload
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: antigravity-demo:dev
+    container_name: antigravity-demo-dev
+    ports:
+      - "5174:5174"
+      - "4173:4173"
+    volumes:
+      # Mount source code for hot-reload
+      - ./src:/app/src
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+      # Named volume for node_modules (faster)
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true  # For Windows hot-reload
+    networks:
+      - antigravity-network
+    stdin_open: true
+    tty: true
+
+  # Test runner
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: antigravity-demo:test
+    container_name: antigravity-demo-test
+    volumes:
+      - ./src:/app/src
+      - ./e2e:/app/e2e
+      - ./playwright.config.ts:/app/playwright.config.ts
+      - node_modules:/app/node_modules
+    command: npm run test:e2e
+    environment:
+      - NODE_ENV=test
+    networks:
+      - antigravity-network
+    depends_on:
+      - web
+
+volumes:
+  node_modules:
+
+networks:
+  antigravity-network:
+    driver: bridge
