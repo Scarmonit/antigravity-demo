@@ -1,15 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import './App.css';
 import Header from './components/Header';
 import StatsBar from './components/StatsBar';
 import InteractiveCounter from './components/InteractiveCounter';
 import FeaturesCard from './components/FeaturesCard';
-import FirebaseCard from './components/FirebaseCard';
-import WorkflowsCard from './components/WorkflowsCard';
 import Footer from './components/Footer';
-import ParticleBackground from './components/ParticleBackground';
-import MCPShowcase from './components/MCPShowcase';
-import RAGShowcase from './components/RAGShowcase';
+
+// Lazy-loaded components for better initial load performance
+const FirebaseCard = lazy(() => import('./components/FirebaseCard'));
+const WorkflowsCard = lazy(() => import('./components/WorkflowsCard'));
+const ParticleBackground = lazy(() => import('./components/ParticleBackground'));
+const MCPShowcase = lazy(() => import('./components/MCPShowcase'));
+const RAGShowcase = lazy(() => import('./components/RAGShowcase'));
+const PerformanceMetrics = lazy(() => import('./components/PerformanceMetrics'));
+
+// Loading fallback component
+const LoadingCard = () => (
+  <div className="card loading-card">
+    <div className="loading-spinner"></div>
+  </div>
+);
 
 function App() {
   const [count, setCount] = useState(0);
@@ -47,7 +57,9 @@ function App() {
 
   return (
     <div className={`app theme-${theme}`}>
-      <ParticleBackground theme={theme} />
+      <Suspense fallback={null}>
+        <ParticleBackground theme={theme} />
+      </Suspense>
       <Header theme={theme} toggleTheme={toggleTheme} />
       <StatsBar stats={stats} count={count} />
       <main className="app-main">
@@ -57,10 +69,21 @@ function App() {
           resetCounter={resetCounter}
         />
         <FeaturesCard features={features} />
-        <MCPShowcase />
-        <RAGShowcase />
-        <FirebaseCard />
-        <WorkflowsCard />
+        <Suspense fallback={<LoadingCard />}>
+          <MCPShowcase />
+        </Suspense>
+        <Suspense fallback={<LoadingCard />}>
+          <RAGShowcase />
+        </Suspense>
+        <Suspense fallback={<LoadingCard />}>
+          <PerformanceMetrics />
+        </Suspense>
+        <Suspense fallback={<LoadingCard />}>
+          <FirebaseCard />
+        </Suspense>
+        <Suspense fallback={<LoadingCard />}>
+          <WorkflowsCard />
+        </Suspense>
       </main>
       <Footer />
     </div>

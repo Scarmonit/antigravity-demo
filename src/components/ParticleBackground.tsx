@@ -80,7 +80,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = React.memo(({ them
                 ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
                 ctx.fillStyle = theme === 'dark'
                     ? `rgba(255, 255, 255, ${0.3 + Math.random() * 0.3})`
-                    : `rgba(102, 126, 234, ${0.3 + Math.random() * 0.3})`;
+                    : `rgba(80, 99, 211, ${0.3 + Math.random() * 0.3})`;
                 ctx.fill();
             });
 
@@ -97,7 +97,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = React.memo(({ them
                         ctx.lineTo(p2.x, p2.y);
                         ctx.strokeStyle = theme === 'dark'
                             ? `rgba(255, 255, 255, ${0.1 * (1 - distance / 150)})`
-                            : `rgba(102, 126, 234, ${0.1 * (1 - distance / 150)})`;
+                            : `rgba(80, 99, 211, ${0.1 * (1 - distance / 150)})`;
                         ctx.lineWidth = 1;
                         ctx.stroke();
                     }

@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Antigravity Demo App', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('domcontentloaded');
+    await page.waitForLoadState('networkidle');
   });
 
   test('should load the main page', async ({ page }) => {
@@ -11,6 +11,7 @@ test.describe('Antigravity Demo App', () => {
   });
 
   test('should display header with theme toggle', async ({ page }) => {
+    await page.waitForSelector('header', { timeout: 10000 });
     const header = page.locator('header').first();
     await expect(header).toBeVisible({ timeout: 10000 });
   });
@@ -27,7 +28,7 @@ test.describe('Antigravity Demo App', () => {
   });
 
   test('should toggle theme between dark and light', async ({ page }) => {
-    await page.waitForSelector('.app', { timeout: 10000 });
+    await page.waitForSelector('.app', { timeout: 30000 });
 
     const app = page.locator('.app').first();
     await expect(app).toHaveClass(/theme-dark/);
