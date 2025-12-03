@@ -2,12 +2,13 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import WorkflowsCard from './WorkflowsCard'
 
-// Mock the workflows data
+// Mock the workflows data (matching src/data/workflows.ts)
 vi.mock('../data/workflows', () => ({
     workflows: [
-        { title: '\uD83D\uDCF1 create-webapp', description: 'Scaffold full-stack applications' },
-        { title: '\uD83C\uDF10 browser-testing', description: 'Automated testing workflows' },
-        { title: '\uD83D\uDD0C build-mcp-server', description: 'Custom MCP server development' },
+        { id: 'create-webapp', title: '\uD83D\uDCF1 create-webapp', description: 'Scaffold full-stack applications' },
+        { id: 'browser-testing', title: '\uD83C\uDF10 browser-testing', description: 'Automated testing workflows' },
+        { id: 'build-mcp-server', title: '\uD83D\uDD0C build-mcp-server', description: 'Custom MCP server development' },
+        { id: 'setup-cicd', title: '\uD83D\uDE80 setup-cicd', description: 'GitHub Actions pipelines' },
     ],
 }))
 
@@ -44,13 +45,13 @@ describe('WorkflowsCard', () => {
         render(<WorkflowsCard />)
 
         const workflowTitles = screen.getAllByRole('heading', { level: 3 })
-        expect(workflowTitles).toHaveLength(3)
+        expect(workflowTitles).toHaveLength(4)
     })
 
     it('renders workflow containers', () => {
         const { container } = render(<WorkflowsCard />)
 
         const workflowElements = container.querySelectorAll('.workflow')
-        expect(workflowElements).toHaveLength(3)
+        expect(workflowElements).toHaveLength(4)
     })
 })

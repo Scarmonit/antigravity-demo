@@ -46,7 +46,7 @@ const RAGShowcase: React.FC = React.memo(() => {
                     <span className="rag-feature-label">Dimensions</span>
                 </div>
                 <div className="rag-feature">
-                    <span className="rag-feature-value">13</span>
+                    <span className="rag-feature-value">{tools.length}</span>
                     <span className="rag-feature-label">Tools</span>
                 </div>
                 <div className="rag-feature">
