@@ -15,6 +15,19 @@ Production-ready React + TypeScript application built with Antigravity IDE workf
 - ✅ **Advanced animations** (glow, pulse effects)
 - ✅ **Theme toggle** (dark/light modes)
 
+## 🚀 Live Deployments
+
+**Production deployments** are available at:
+
+- 🌐 **GitHub Pages**: https://scarmonit.github.io/antigravity-demo/
+- ⚡ **Vercel** (Recommended): https://antigravity-demo-rho.vercel.app/
+
+Both deployments feature:
+- ✅ Automated CI/CD via GitHub Actions
+- ✅ E2E testing before deployment
+- ✅ Instant rollback capabilities
+- ✅ Production-optimized builds
+
 ## Quick Start
 
 ```bash
