@@ -26,4 +26,6 @@ const FirebaseCard: React.FC = React.memo(() => {
   );
 });
 
+FirebaseCard.displayName = 'FirebaseCard';
+
 export default FirebaseCard;

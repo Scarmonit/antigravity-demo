@@ -15,4 +15,6 @@ const Footer: React.FC = React.memo(() => {
   );
 });
 
+Footer.displayName = 'Footer';
+
 export default Footer;

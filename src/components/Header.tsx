@@ -21,4 +21,6 @@ const Header: React.FC<HeaderProps> = React.memo(({ theme, toggleTheme }) => {
   );
 });
 
+Header.displayName = 'Header';
+
 export default Header;

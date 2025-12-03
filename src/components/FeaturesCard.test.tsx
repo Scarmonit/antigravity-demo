@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import FeaturesCard from './FeaturesCard'
+import { Feature } from '../data/features'
 
 describe('FeaturesCard', () => {
     it('renders the card with title', () => {
@@ -18,10 +19,10 @@ describe('FeaturesCard', () => {
     })
 
     it('renders all provided features', () => {
-        const features = [
-            'Feature 1',
-            'Feature 2',
-            'Feature 3',
+        const features: Feature[] = [
+            { id: 'feature-1', text: 'Feature 1' },
+            { id: 'feature-2', text: 'Feature 2' },
+            { id: 'feature-3', text: 'Feature 3' },
         ]
         render(<FeaturesCard features={features} />)
 
@@ -30,16 +31,18 @@ describe('FeaturesCard', () => {
     })
 
     it('displays feature text correctly', () => {
-        const features = ['Test feature with special chars: @#$%']
+        const features: Feature[] = [
+            { id: 'test-feature', text: 'Test feature with special chars: @#$%' }
+        ]
         render(<FeaturesCard features={features} />)
 
         expect(screen.getByText('Test feature with special chars: @#$%')).toBeInTheDocument()
     })
 
     it('renders features with emojis', () => {
-        const features = [
-            '\u2705 Full automation with turbo-mode workflows',
-            '\uD83D\uDD25 Firebase MCP integration ready',
+        const features: Feature[] = [
+            { id: 'automation', text: '\u2705 Full automation with turbo-mode workflows' },
+            { id: 'firebase', text: '\uD83D\uDD25 Firebase MCP integration ready' },
         ]
         render(<FeaturesCard features={features} />)
 
@@ -48,7 +51,7 @@ describe('FeaturesCard', () => {
     })
 
     it('has correct CSS classes', () => {
-        render(<FeaturesCard features={['Test']} />)
+        render(<FeaturesCard features={[{ id: 'test', text: 'Test' }]} />)
 
         const card = screen.getByRole('heading', { level: 2 }).parentElement
         expect(card).toHaveClass('features-card')
@@ -58,7 +61,10 @@ describe('FeaturesCard', () => {
     })
 
     it('renders list items with feature-item class', () => {
-        const features = ['Feature 1', 'Feature 2']
+        const features: Feature[] = [
+            { id: 'feature-1', text: 'Feature 1' },
+            { id: 'feature-2', text: 'Feature 2' }
+        ]
         render(<FeaturesCard features={features} />)
 
         const listItems = screen.getAllByRole('listitem')
@@ -68,7 +74,10 @@ describe('FeaturesCard', () => {
     })
 
     it('handles many features', () => {
-        const features = Array.from({ length: 50 }, (_, i) => `Feature ${i + 1}`)
+        const features: Feature[] = Array.from({ length: 50 }, (_, i) => ({
+            id: `feature-${i + 1}`,
+            text: `Feature ${i + 1}`
+        }))
         render(<FeaturesCard features={features} />)
 
         const listItems = screen.getAllByRole('listitem')

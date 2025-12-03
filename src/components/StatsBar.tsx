@@ -9,7 +9,7 @@ interface StatsBarProps {
   count: number;
 }
 
-const StatsBar: React.FC<StatsBarProps> = ({ stats, count }) => {
+const StatsBar: React.FC<StatsBarProps> = React.memo(({ stats, count }) => {
   return (
     <div className="stats-bar">
       <div className="stat-item">
@@ -30,6 +30,8 @@ const StatsBar: React.FC<StatsBarProps> = ({ stats, count }) => {
       </div>
     </div>
   );
-};
+});
+
+StatsBar.displayName = 'StatsBar';
 
 export default StatsBar;

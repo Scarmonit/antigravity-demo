@@ -6,7 +6,7 @@ interface InteractiveCounterProps {
   resetCounter: () => void;
 }
 
-const InteractiveCounter: React.FC<InteractiveCounterProps> = ({ count, setCount, resetCounter }) => {
+const InteractiveCounter: React.FC<InteractiveCounterProps> = React.memo(({ count, setCount, resetCounter }) => {
   return (
     <div className="card">
       <h2>Interactive Counter</h2>
@@ -32,6 +32,8 @@ const InteractiveCounter: React.FC<InteractiveCounterProps> = ({ count, setCount
       </p>
     </div>
   );
-};
+});
+
+InteractiveCounter.displayName = 'InteractiveCounter';
 
 export default InteractiveCounter;
